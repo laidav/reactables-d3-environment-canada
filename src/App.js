@@ -9,13 +9,7 @@ import RadialChart from './visualizations/RadialChart';
 const App = () => {
 
   const [state, actions] = useReactable(RxChartData);
-
-  // Why do I have to provide both year and cityId when only 1 changes.
-  // Ideally destructure should take the previous default if I provide undefined,
-  // and if I split it into 2 methods that sucks too then have to extract
-  // the logic from the effect.
-  // Augmenting reducer to allow optional payload properties doesn't work
-  // because effect doesn't get the state, only payload.
+  
   const updateYear = (e) => {
     actions.updateCityData({ year: e.target.value, cityId: state.cityId })
   }
@@ -24,9 +18,6 @@ const App = () => {
     actions.updateCityData({ year: state.year, cityId: e.target.value });
   }
 
-  // Handling default with both value and onChange is weird, there's state correlation between the two.
-  // The default should derive from the state and onchange shouldn't be necessary given value is updated
-  // when an option is selected.
   return (
     <div className="App">
       {state && (
