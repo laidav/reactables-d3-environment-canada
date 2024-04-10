@@ -1,22 +1,20 @@
 import { RxBuilder } from '@reactables/core';
 import { switchMap, map } from 'rxjs/operators';
-import { of } from 'rxjs'
+import { forkJoin, of } from 'rxjs'
 
-const baseUrl = 'https://api.weather.gc.ca/collections/climate-daily/items?f=json&lang=en'
+const baseStationsUrl = 'https://api.weather.gc.ca/collections/climate-stations/items?f=json&lang=en&STATION_TYPE=CLIMATE-AUTO&ENG_STN_OPERATOR_ACRONYM=ECCC&HAS_HOURLY_DATA=Y';
+const baseWeatherUrl = 'https://api.weather.gc.ca/collections/climate-daily/items?f=json&lang=en';
 const previousYear = new Date().getFullYear() - 1;
+const cityNames = ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Winnipeg', 'Saskatoon'];
 
 const initialState = {
     updating: false,
     year: '2023',
     cityId: '6158355',
-    cityData: null,
     years: Array.from({ length: 5 }, (_, i) => previousYear - i),
-    cities: [
-        { label: 'Toronto', value: '6158355' },
-        { label: 'Vancouver', value: '1108380' },
-        { label: 'Montreal', value: '702S006' }
-    ]
-}
+    cities: [],
+    cityData: null
+};
 
 export const RxChartData = () =>
     RxBuilder({
@@ -36,14 +34,32 @@ export const RxChartData = () =>
                     effects: [
                         (getCities$) => {
                             return getCities$.pipe(
-                                switchMap(({ payload }) => {
-                                    return fetch('');
-                                })
+
+                                // Call city API Service - switchMap operator cancels previous pending call if a new one is initiated
+                                switchMap(() => {
+                                    const cityRequests = cityNames.map(city => fetch(`${baseStationsUrl}&STATION_NAME=${city}`).then(response => response.json()));
+                                    return forkJoin(cityRequests);
+                                }),
+
+                                // Map the stations to the cities
+                                map(stationRequests => {
+                                    return stationRequests.map((stationRequest, index) => ({
+                                        label: cityNames[index],
+                                        value: stationRequest.features[0].id
+                                    }));
+                                }),
+
+                                // Map success response to appropriate action
+                                map((stations) => ({ type: 'stationsUpdateSuccess', payload: stations }))
                             );
                         }
                     ]
                 })
             },
+            stationsUpdateSuccess: (state, { payload: stationsData }) => ({
+                ...state,
+                cities: stationsData
+            }),
             updateCityData: {
                 reducer: (state, { payload: { year, cityId } }) => ({
                     ...state,
@@ -59,7 +75,7 @@ export const RxChartData = () =>
 
                                 // Call city API Service - switchMap operator cancels previous pending call if a new one is initiated
                                 switchMap(({ payload }) => {
-                                    return fetch(`${baseUrl}&LOCAL_YEAR=${payload.year}&CLIMATE_IDENTIFIER=${payload.cityId}`).then(response => response.json());
+                                    return fetch(`${baseWeatherUrl}&LOCAL_YEAR=${payload.year}&CLIMATE_IDENTIFIER=${payload.cityId}`).then(response => response.json());
                                 }),
 
                                 // Convert date strings to Date objects
