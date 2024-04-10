@@ -11,7 +11,7 @@
     "react-dom": "^16.3.1",
     "react-scripts": "1.1.4"
   },
-  "homepage": "http://sxywu.github.io/react-d3-example",
+  "homepage": "https://github.com/automaton82/reactables-d3-environment-canada",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

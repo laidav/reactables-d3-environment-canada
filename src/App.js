@@ -24,7 +24,7 @@ const App = () => {
         <h1>
           <select name='year' value={state.year} onChange={updateYear} disabled={state.updating}>
             {
-              ['2019', '2020', '2021', '2022', '2023'].map(option => {
+              state.years.map(option => {
                 return (<option key={option} value={option}>{option}</option>);
               })
             }

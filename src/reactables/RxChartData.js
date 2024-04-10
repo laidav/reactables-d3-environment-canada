@@ -3,12 +3,14 @@ import { switchMap, map } from 'rxjs/operators';
 import { of } from 'rxjs'
 
 const baseUrl = 'https://api.weather.gc.ca/collections/climate-daily/items?f=json&lang=en'
+const previousYear = new Date().getFullYear() - 1;
 
 const initialState = {
     updating: false,
     year: '2023',
     cityId: '6158355',
     cityData: null,
+    years: Array.from({ length: 5 }, (_, i) => previousYear - i),
     cities: [
         { label: 'Toronto', value: '6158355' },
         { label: 'Vancouver', value: '1108380' },
